@@ -1,29 +1,51 @@
-pub mod bundling {
+pub struct Bundle {
+    project_name: String,
+    pub root_path: String,
+    pub bundle_path: String,
+    pub public_path: String,
+    pub is_ts: bool,
+    pub with_src: bool,
+}
 
-    pub struct Bundle {
-        pub root_path: String,
-        pub bundle_path: String,
-        pub public_path: String,
-        pub is_ts: bool,
+impl Bundle {
+    // Creating a Bundle
+    pub fn new(p_name: &str) -> Self {
+        Self {
+            project_name: String::from(p_name),
+            root_path: format!("./{}/", &p_name),
+            bundle_path: format!("./{}/", &p_name),
+            public_path: format!("./{}/public/", &p_name),
+            is_ts: true,
+            with_src: true,
+        }
     }
 
-    impl Bundle {
-        // Creating a Bundle
-        pub fn new(p_name: &str, ts: bool, src: bool) -> Bundle {
-            let bp: String;
-            if src {
-                bp = format!("./{}/src/", &p_name)
-            } else {
-                bp = format!("./{}/", &p_name)
-            }
+    pub fn set_src(self, src: bool) -> Self {
+        let bp: String;
+        if src {
+            bp = format!("./{}/src/", &self.project_name)
+        } else {
+            bp = format!("./{}/", &self.project_name)
+        }
 
-            let bundle: Bundle = Bundle {
-                root_path: format!("./{}/", &p_name),
-                bundle_path: bp,
-                public_path: format!("./{}/public/", &p_name),
-                is_ts: ts,
-            };
-            bundle
+        Self {
+            project_name: self.project_name,
+            root_path: self.root_path,
+            bundle_path: bp,
+            public_path: self.public_path,
+            is_ts: self.is_ts,
+            with_src: src,
+        }
+    }
+
+    pub fn set_ts(self, ts: bool) -> Self {
+        Self {
+            project_name: self.project_name,
+            root_path: self.root_path,
+            bundle_path: self.bundle_path,
+            public_path: self.public_path,
+            is_ts: ts,
+            with_src: self.with_src,
         }
     }
 }

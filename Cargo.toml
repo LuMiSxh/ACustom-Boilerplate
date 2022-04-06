@@ -1,7 +1,5 @@
 [package]
-name = "cli_application"
-author = "Luca Michael Schmidt"
-mail = "schmidt.lucamichael@icloud.com"
+name = "acustom_boilerplate"
 version = "0.1.0"
 edition = "2021"
 

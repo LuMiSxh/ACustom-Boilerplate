@@ -1,0 +1,17 @@
+node_modules
+yarn.lock
+package-lock.json
+
+tsconfig.json
+
+
+public
+.next
+next-env.d.ts
+
+globals.css
+README.md
+
+
+.eslintignore
+.prettierignore

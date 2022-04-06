@@ -1,22 +1,31 @@
+mod manager;
+mod pathing;
+
 use colored::*;
 use dialoguer::*;
+use std::collections::HashMap;
 use std::fs;
 use std::process;
 
-mod pathing;
-use pathing::{bundling, utilities};
+use pathing::utilities;
 
 #[tokio::main]
 async fn main() {
     // variable declaration
-    let bundle: bundling::Bundle;
+    let bundle: pathing::Bundle;
     let ts: bool;
     let src: bool;
 
-    // 0 = WASM
-    let base_modules = vec!["WASM"];
+    // reqwest client
+    let async_client: reqwest::Client = reqwest::Client::new();
+    // reqwest client
 
-    // 0 = components; 1 = constants; 2 = hooks; 3 = lib; 4 = modules; 5 = types
+    // URL's for the raw data
+    let mut raw_content: HashMap<String, String> = HashMap::new();
+    raw_content.insert("package.json".to_string(), "".to_string());
+    // URL's for the raw data
+
+    // 0 = components; 1 = constants; 2 = hooks; 3 = lib; 4 = modules; 5 = types; 6 = WASM
     let folders = vec![
         "components",
         "constants",
@@ -24,7 +33,14 @@ async fn main() {
         "lib",
         "modules",
         "types",
+        "WASM",
     ];
+
+    let d_manager = manager::DependencyManager::new(
+        vec![],
+        vec!["react-dom: ^17.0.2".into(), "next: ^12.1.0".into()],
+    );
+    d_manager.build_package("", "".into());
 
     // Asking if user wants to continue
 
@@ -43,7 +59,7 @@ async fn main() {
 
     let project_name: String = Input::<String>::new()
         .with_prompt( format!("{}", "Enter a project name ".blue().bold()))
-        .default("drageast-biolerplate".into())
+        .default("drageast-boilerplate".into())
         .validate_with({
             move |input: &String| -> Result<(), &str> {
                 if input.contains(char::is_whitespace) {
@@ -84,17 +100,6 @@ async fn main() {
         .interact()
         .unwrap();
 
-    // Choosing base-modules
-
-    let chosen_base_modules: Vec<usize> = MultiSelect::new()
-        .items(&base_modules)
-        .with_prompt(format!(
-            "{}",
-            "Choose modules you want to be included".blue().bold()
-        ))
-        .interact()
-        .unwrap();
-
     // Choosing folders that should be included
 
     let chosen_folders: Vec<usize> = MultiSelect::new()
@@ -107,7 +112,7 @@ async fn main() {
         .unwrap();
 
     // Setting the bundled path
-    bundle = bundling::Bundle::new(&project_name, ts, src);
+    bundle = pathing::Bundle::new(&project_name).set_src(src).set_ts(ts);
     drop(ts);
     drop(src);
 
@@ -122,7 +127,7 @@ async fn main() {
     }
 
     // Creating the 'src' directory
-    if src {
+    if bundle.with_src {
         match fs::create_dir(format!("./{}/src/", &project_name)) {
             Err(reason) => {
                 println!("{:?}", reason);
@@ -132,18 +137,19 @@ async fn main() {
         }
     }
 
-    for option in chosen_base_modules {
-        match option {
-            0 => match fs::create_dir(format!("{}WASM/", &bundle.bundle_path)) {
-                Err(reason) => {
-                    println!("{:?}", reason);
-                    process::exit(1)
-                }
-                Ok(_) => {
-                    utilities::create_index(format!("{}WASM", &bundle.bundle_path), &bundle.is_ts);
-                }
-            },
-            _ => {}
+    // creating the different folders with index files
+    for folder in chosen_folders {
+        match fs::create_dir(format!("{}{}/", &bundle.bundle_path, &folders[folder])) {
+            Err(reason) => {
+                println!("{:?}", reason);
+                process::exit(1)
+            }
+            Ok(_) => {
+                utilities::create_index(
+                    format!("{}{}", &bundle.bundle_path, &folders[folder]),
+                    &bundle.is_ts,
+                );
+            }
         }
     }
 }
